@@ -31,7 +31,7 @@ def train(model, trainloader, device):
     #TODO adjust optimizer hyperparameters
     #optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     #optimizer = optim.Adam(model.parameters(), lr=0.001)
-    optimizer = LBFGSNew(model.parameters(), history_size=20, max_iter=10, line_search_fn=True, batch_mode=True)        # history_size, max_iter all hyper_parameter
+    optimizer = LBFGSNew(model.parameters(), history_size=7, max_iter=2, line_search_fn=True, batch_mode=True)        # history_size, max_iter all hyper_parameter
 
 
     for epoch in range(nb_epochs):
