@@ -24,7 +24,7 @@ def test(model, testloader, device):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+    print('Accuracy of the network on the 10000 test images: {}'.format(100 * correct / total))
 
 
 def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
@@ -74,7 +74,7 @@ def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
         
             running_loss += loss.item()
             if i % 100 == 99:    # print every 100 mini-batches
-                print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 100))
+                print('[{}, {}] loss: {}'.format(epoch + 1, i + 1, running_loss / 100))
                 running_loss = 0.0
 
     print('Finished Training')
@@ -108,15 +108,17 @@ def main():
 
     num_classes = 10
     
-    net = models.vgg16_bn()
-    #net = models.resnet18()
+    #net = models.vgg16_bn()
+    #net.classifier[6] = nn.Linear(4096, num_classes)
+    
+    net = models.resnet18()
+    net.fc = nn.Linear(512, num_classes)
     #net = models.resnet50()
     
-    net.classifier[6] = nn.Linear(4096, num_classes)
     print(net)
 
     net.to(device)
-    opt = 'sgd' # ['lbfgs' | 'adam']
+    opt = 'adam' # ['lbfgs' | 'adam']
     train(net, trainloader, device, opt, nb_epochs, lr=lr)
     test(net, testloader, device)
 
