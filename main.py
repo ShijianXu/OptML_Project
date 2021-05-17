@@ -1,15 +1,19 @@
 # PyTorch CIFAR10, L-BFGS
 import torch
+from torch.nn.modules.linear import Linear
+from torch.optim import optimizer
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
+import torchvision.models as models
 
 from model import Net
 from lbfgsnew import LBFGSNew
 
 
 def test(model, testloader, device):
+    model.eval()
     correct = 0
     total = 0
     with torch.no_grad():
@@ -23,15 +27,21 @@ def test(model, testloader, device):
     print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
 
 
-def train(model, trainloader, device):
+def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
+    model.train()
+
     #TODO adjust nb_epochs
-    nb_epochs = 10
     criterion = nn.CrossEntropyLoss()
 
     #TODO adjust optimizer hyperparameters
-    #optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    #optimizer = optim.Adam(model.parameters(), lr=0.001)
-    optimizer = LBFGSNew(model.parameters(), history_size=7, max_iter=2, line_search_fn=True, batch_mode=True)        # history_size, max_iter all hyper_parameter
+    if opt == 'sgd':
+        optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    elif opt == 'adam':
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
+    elif opt == 'lbfgs':
+        optimizer = LBFGSNew(model.parameters(), history_size=7, max_iter=2, line_search_fn=True, batch_mode=True)        # history_size, max_iter all hyper_parameter
+    else:
+        raise NotImplementedError
 
 
     for epoch in range(nb_epochs):
@@ -50,7 +60,10 @@ def train(model, trainloader, device):
                     loss.backward()
                 return loss
 
-            loss = optimizer.step(closure)
+            optimizer.step(closure)
+
+            outputs=model(inputs)
+            loss=criterion(outputs,labels)
 
 
             """
@@ -75,24 +88,42 @@ def train(model, trainloader, device):
 
 
 def main():
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    train_transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    ])
+
+    test_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    ])
 
 
     #TODO adjust batch size
-    batch_size = 4
+    batch_size = 128
+    nb_epochs = 200
+    lr = 0.001
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=train_transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=test_transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
 
-    net = Net()
-    net.to(device)
+    num_classes = 10
+    
+    net = models.vgg16_bn()
+    #net = models.resnet18()
+    #net = models.resnet50()
+    
+    net.classifier[6] = nn.Linear(4096, num_classes)
+    print(net)
 
-    train(net, trainloader, device)
+    net.to(device)
+    opt = 'sgd' # ['lbfgs' | 'adam']
+    train(net, trainloader, device, opt, nb_epochs, lr=lr)
     test(net, testloader, device)
 
 
