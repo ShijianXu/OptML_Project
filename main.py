@@ -30,8 +30,8 @@ def test(model, testloader, device):
 def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
     model.train()
 
-    #TODO adjust nb_epochs
     criterion = nn.CrossEntropyLoss()
+    print("Using optimizer: ", opt)
 
     #TODO adjust optimizer hyperparameters
     if opt == 'sgd':
@@ -50,33 +50,27 @@ def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
         for i, data in enumerate(trainloader, 0):
             inputs, labels = data[0].to(device), data[1].to(device)
 
-            # Def Closure
-            def closure():
-                if torch.is_grad_enabled():
-                    optimizer.zero_grad()
+            if opt == 'lbfgs':
+                # Def Closure
+                def closure():
+                    if torch.is_grad_enabled():
+                        optimizer.zero_grad()
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
+                    if loss.requires_grad:
+                        loss.backward()
+                    return loss
+
+                optimizer.step(closure)
+                outputs=model(inputs)
+                loss=criterion(outputs,labels)
+
+            else:
+                optimizer.zero_grad()
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
-                if loss.requires_grad:
-                    loss.backward()
-                return loss
-
-            optimizer.step(closure)
-
-            outputs=model(inputs)
-            loss=criterion(outputs,labels)
-
-
-            """
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            """
-
+                loss.backward()
+                optimizer.step()
         
             running_loss += loss.item()
             if i % 100 == 99:    # print every 100 mini-batches
@@ -102,7 +96,7 @@ def main():
 
     #TODO adjust batch size
     batch_size = 128
-    nb_epochs = 200
+    nb_epochs = 100
     lr = 0.001
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
