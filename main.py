@@ -37,9 +37,9 @@ def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
     if opt == 'sgd':
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
     elif opt == 'adam':
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        optimizer = optim.Adam(model.parameters(), lr=lr)
     elif opt == 'lbfgs':
-        optimizer = LBFGSNew(model.parameters(), history_size=7, max_iter=2, line_search_fn=True, batch_mode=True)        # history_size, max_iter all hyper_parameter
+        optimizer = LBFGSNew(model.parameters(), history_size=7, max_iter=2, line_search_fn=True, batch_mode=True)
     else:
         raise NotImplementedError
 
