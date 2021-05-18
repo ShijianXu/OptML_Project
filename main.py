@@ -1,12 +1,11 @@
 # PyTorch CIFAR10, L-BFGS
 import torch
-from torch.nn.modules.linear import Linear
-from torch.optim import optimizer
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
 import torchvision.models as models
+import json
 
 from model import Net
 from lbfgsnew import LBFGSNew
@@ -24,11 +23,12 @@ def test(model, testloader, device):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-    print('Accuracy of the network on the 10000 test images: {}'.format(100 * correct / total))
+    return 100 * correct / total
 
 
-def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
-    model.train()
+def train(model_name, model, trainloader, testloader, device, opt, nb_epochs, lr=0.001):
+    history_loss = []
+    history_acc = []
 
     criterion = nn.CrossEntropyLoss()
     print("Using optimizer: ", opt)
@@ -40,14 +40,17 @@ def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
         optimizer = optim.Adam(model.parameters(), lr=lr)
     elif opt == 'lbfgs':
         optimizer = LBFGSNew(model.parameters(), history_size=7, max_iter=2, line_search_fn=True, batch_mode=True)
+        #optimizer = optim.LBFGS(model.parameters())
     else:
         raise NotImplementedError
 
 
     for epoch in range(nb_epochs):
+        # Train for each epoch
+        model.train()
 
         running_loss = 0.0
-        for i, data in enumerate(trainloader, 0):
+        for batch_idx, data in enumerate(trainloader, 0):
             inputs, labels = data[0].to(device), data[1].to(device)
 
             if opt == 'lbfgs':
@@ -73,12 +76,23 @@ def train(model, trainloader, device, opt, nb_epochs, lr=0.001):
                 optimizer.step()
         
             running_loss += loss.item()
-            if i % 100 == 99:    # print every 100 mini-batches
-                print('[{}, {}] loss: {}'.format(epoch + 1, i + 1, running_loss / 100))
-                running_loss = 0.0
+            #if batch_idx % 100 == 99:    # print every 100 mini-batches
+            #    print('[{}, {}] loss: {}'.format(epoch + 1, i + 1, running_loss / 100))
+            #    running_loss = 0.0
 
+        # Test for each epoch
+        epoch_loss = running_loss / (batch_idx+1)
+        epoch_acc = test(model, testloader, device)
+
+        print("Epoch {} train loss: {}, test acc: {}".format(epoch+1, epoch_loss, epoch_acc))
+        history_loss.append(epoch_loss)
+        history_acc.append(epoch_acc)
+        
     print('Finished Training')
-
+    with open('history_loss' + '_' + model_name + '_' + opt + '.json', 'w') as f:
+        json.dump(history_loss, f)
+    with open('history_acc' + '_' + model_name + '_' + opt + '.json', 'w') as f:
+        json.dump(history_acc, f)
 
 
 def main():
@@ -108,19 +122,24 @@ def main():
 
     num_classes = 10
     
-    #net = models.vgg16_bn()
-    #net.classifier[6] = nn.Linear(4096, num_classes)
-    
-    net = models.resnet18()
-    net.fc = nn.Linear(512, num_classes)
-    #net = models.resnet50()
-    
-    print(net)
+    model_names = ['vgg16_bn', 'resnet18']
+    optim_names = ['lbfgs', 'adam', 'sgd']
 
-    net.to(device)
-    opt = 'adam' # ['lbfgs' | 'adam']
-    train(net, trainloader, device, opt, nb_epochs, lr=lr)
-    test(net, testloader, device)
+    for model_name in model_names:     
+        for opt in optim_names:
+            ## !!! TODO every iter should create a new model !!!
+            print("creating model: ", model_name)
+            print("using optimizer: ", opt)
+
+            if model_name == 'vgg16_bn':
+                model = models.vgg16_bn()
+                model.classifier[6] = nn.Linear(4096, num_classes)
+            elif model_name == 'resnet18':
+                model = models.resnet18()
+                model.fc = nn.Linear(512, num_classes)
+                
+            model.to(device)
+            train(model_name, model, trainloader, testloader, device, opt, nb_epochs, lr=lr)
 
 
 if __name__ == "__main__":
