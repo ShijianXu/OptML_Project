@@ -28,11 +28,11 @@ with open('history_loss_vgg16_bn_sgd.json') as f:
     loss_sgd = json.load(f)
 """
 
-with open('history_loss_resnet18_adam.json') as f:
+with open('./results/history_loss_resnet18_adam.json') as f:
     loss_adam = json.load(f)
-with open('history_loss_resnet18_lbfgs.json') as f:
+with open('./results/history_loss_resnet18_lbfgs.json') as f:
     loss_lbfgs = json.load(f)
-with open('history_loss_resnet18_sgd.json') as f:
+with open('./results/history_loss_resnet18_sgd.json') as f:
     loss_sgd = json.load(f)
 
 
