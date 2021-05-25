@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import models
 
 
 class Net(nn.Module):
@@ -22,6 +23,12 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
+class LogisticRegression(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(LogisticRegression, self).__init__()
+        self.linear = nn.Linear(input_dim, output_dim)
 
-if __name__ == "__main__":
-    pass
+    def forward(self, x):
+        x = torch.flatten(x, 1)
+        outputs = F.softmax(self.linear(x), dim=1)
+        return outputs

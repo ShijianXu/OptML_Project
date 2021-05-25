@@ -7,7 +7,7 @@ import torch.nn as nn
 import torchvision.models as models
 import json
 
-from model import Net
+from model import LogisticRegression
 from lbfgsnew import LBFGSNew
 
 
@@ -89,9 +89,9 @@ def train(model_name, model, trainloader, testloader, device, opt, nb_epochs, lr
         history_acc.append(epoch_acc)
         
     print('Finished Training')
-    with open('history_loss' + '_' + model_name + '_' + opt + '.json', 'w') as f:
+    with open('history_loss_mnist' + '_' + model_name + '_' + opt + '.json', 'w') as f:
         json.dump(history_loss, f)
-    with open('history_acc' + '_' + model_name + '_' + opt + '.json', 'w') as f:
+    with open('history_acc_mnist' + '_' + model_name + '_' + opt + '.json', 'w') as f:
         json.dump(history_acc, f)
 
 
@@ -115,15 +115,21 @@ def main():
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=train_transform)
+    # MNIST Dataset
+    trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
+    testset = torchvision.datasets.MNIST(root='./data', train=False, transform=transforms.ToTensor())
+
+    # CIFAR10 Dataset
+    #trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=train_transform)
+    #testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=test_transform)
+    
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=test_transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
 
     num_classes = 10
     
-    model_names = ['vgg16_bn', 'resnet18']
-    optim_names = ['lbfgs', 'adam', 'sgd']
+    model_names = ['LR']    #'vgg16_bn', 'resnet18']
+    optim_names = ['sgd', 'adam', 'lbfgs']
 
     for model_name in model_names:     
         for opt in optim_names:
@@ -137,6 +143,8 @@ def main():
             elif model_name == 'resnet18':
                 model = models.resnet18()
                 model.fc = nn.Linear(512, num_classes)
+            elif model_name == 'LR':
+                model = LogisticRegression(784, num_classes)
                 
             model.to(device)
             train(model_name, model, trainloader, testloader, device, opt, nb_epochs, lr=lr)
