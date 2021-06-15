@@ -46,14 +46,14 @@ with open('./results/history_loss_LR_sgd.json') as f:
     loss_sgd = json.load(f)
 """
 
-
+"""
 with open('./results/history_acc_LR_adam.json') as f:
     loss_adam = json.load(f)
 with open('./results/history_acc_LR_lbfgs.json') as f:
     loss_lbfgs = json.load(f)
 with open('./results/history_acc_LR_sgd.json') as f:
     loss_sgd = json.load(f)
-
+"""
 
 """
 with open('./results/history_loss_mnist_LR_adam.json') as f:
@@ -73,15 +73,49 @@ with open('./results/history_acc_mnist_LR_sgd.json') as f:
     loss_sgd = json.load(f)
 """
 
+"""
+with open('./results/history_acc_cifar_MLP_adam.json') as f:
+    loss_adam = json.load(f)
+with open('./results/history_acc_cifar_MLP_lbfgs.json') as f:
+    loss_lbfgs = json.load(f)
+with open('./results/history_acc_cifar_MLP_sgd.json') as f:
+    loss_sgd = json.load(f)
+"""
 
+"""
+with open('./results/history_acc_cifar_MLP_adam.json') as f:
+    loss_adam = json.load(f)
+with open('./results/history_acc_cifar_MLP_lbfgs.json') as f:
+    loss_lbfgs = json.load(f)
+with open('./results/history_acc_cifar_MLP_lbfgs2.json') as f:
+    loss_lbfgs2 = json.load(f)
+with open('./results/history_acc_cifar_MLP_sgd.json') as f:
+    loss_sgd = json.load(f)
+"""
 
-x = range(1, len(loss_lbfgs)+1)
+"""
+with open('./results/history_acc_mnist_MLP_adam.json') as f:
+    loss_adam = json.load(f)
+with open('./results/history_acc_mnist_MLP_lbfgs.json') as f:
+    loss_lbfgs = json.load(f)
+with open('./results/history_acc_mnist_MLP_sgd.json') as f:
+    loss_sgd = json.load(f)
+"""
+
+with open('./results/history_loss_mnist_MLP_adam.json') as f:
+    loss_adam = json.load(f)
+with open('./results/history_loss_mnist_MLP_lbfgs.json') as f:
+    loss_lbfgs = json.load(f)
+with open('./results/history_loss_mnist_MLP_sgd.json') as f:
+    loss_sgd = json.load(f)
+
+x = range(1, len(loss_adam)+1)
 plt.plot(x, loss_adam, label='Adam')
 plt.plot(x, loss_sgd, label='SGD-Momentum')
 plt.plot(x, loss_lbfgs, label='L-BFGS')
 plt.xlabel('epochs')
-plt.ylabel('Test Accuracy')
-plt.title('Logistic Regression Test Accuracy on CIFAR10')
+plt.ylabel('Training Loss')
+plt.title('MLP Training Loss on MNIST')
 plt.legend()
-plt.savefig("LR_acc.png")
+plt.savefig("MLP_loss_MNIST.png")
 plt.show()
