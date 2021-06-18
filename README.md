@@ -3,9 +3,7 @@
 This repo contains the code and results for the OptML course project.
 To reproduce our results, you can simply using the following command:
 
-``` shell
-python run.py
-```
+``` python run.py ```
 
 Files included are:
 
