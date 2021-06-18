@@ -129,7 +129,7 @@ def main():
 
     num_classes = 10
     
-    model_names = ['MLP']    #'LR', 'vgg16_bn', 'resnet18']
+    model_names = ['MLP', 'LR', 'vgg16_bn', 'resnet18']
     optim_names = ['sgd', 'adam', 'lbfgs']
 
     for model_name in model_names:     
@@ -147,8 +147,7 @@ def main():
             elif model_name == 'LR':
                 model = LogisticRegression(784, num_classes)    # 3072 for CIFAR10, 784 for MNIST
             elif model_name == 'MLP':
-                model = MLP(1*28*28)               # only train on CIFAR10
-
+                model = MLP(1*28*28)                            # 3072 for CIFAR10, 784 for MNIST
             model.to(device)
             train(model_name, model, trainloader, testloader, device, opt, nb_epochs, lr=lr)
 
